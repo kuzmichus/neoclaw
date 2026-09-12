@@ -30,8 +30,8 @@ export default defineConfig({
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on("proxyReq", (proxyReq) => {
-            proxyReq.setHeader("origin", "http://localhost:18800");
-          });
+            proxyReq.setHeader("origin", "http://localhost:18800")
+          })
         },
       },
       "/pico/media": {

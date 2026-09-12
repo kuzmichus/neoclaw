@@ -218,10 +218,14 @@ export function ChatComposer({
                   onClick={onToggleRecord}
                   disabled={!canInput}
                   aria-label={
-                    isRecording ? t("chat.stopRecording") : t("chat.recordVoice")
+                    isRecording
+                      ? t("chat.stopRecording")
+                      : t("chat.recordVoice")
                   }
                   title={
-                    isRecording ? t("chat.stopRecording") : t("chat.recordVoice")
+                    isRecording
+                      ? t("chat.stopRecording")
+                      : t("chat.recordVoice")
                   }
                 >
                   {isRecording ? (

@@ -9,6 +9,7 @@ import {
   useState,
 } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 
 import { AssistantMessage } from "@/components/chat/assistant-message"
 import {
@@ -35,12 +36,11 @@ import {
   getTransferredFiles,
   hasFileTransfer,
 } from "@/features/chat/attachment-input"
+import { useVoiceRecorder } from "@/features/chat/use-voice-recorder"
 import { useChatModels } from "@/hooks/use-chat-models"
 import { useGateway } from "@/hooks/use-gateway"
 import { usePicoChat } from "@/hooks/use-pico-chat"
 import { useSessionHistory } from "@/hooks/use-session-history"
-import { useVoiceRecorder } from "@/features/chat/use-voice-recorder"
-import { toast } from "sonner"
 import type { AssistantDetailVisibility } from "@/store/chat"
 import type { ConnectionState } from "@/store/chat"
 import type { ChatAttachment } from "@/store/chat"

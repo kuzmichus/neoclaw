@@ -81,9 +81,13 @@ function parseContextUsage(
   return {
     used_tokens: used,
     total_tokens: total,
-    history_tokens: obj.history_tokens != null ? Number(obj.history_tokens) : undefined,
+    history_tokens:
+      obj.history_tokens != null ? Number(obj.history_tokens) : undefined,
     compress_at_tokens: Number(obj.compress_at_tokens) || 0,
-    summarize_at_tokens: obj.summarize_at_tokens != null ? Number(obj.summarize_at_tokens) : undefined,
+    summarize_at_tokens:
+      obj.summarize_at_tokens != null
+        ? Number(obj.summarize_at_tokens)
+        : undefined,
     used_percent: Number(obj.used_percent) || 0,
   }
 }
@@ -258,8 +262,7 @@ export function handlePicoMessage(
         ["thinking", "tool", "skill", "mcp", "web"].includes(phaseRaw)
           ? (phaseRaw as AgentStatusPhase)
           : "thinking"
-      const label =
-        typeof payload.label === "string" ? payload.label : ""
+      const label = typeof payload.label === "string" ? payload.label : ""
       updateChatStore({ agentStatus: { phase, label } })
       break
     }

@@ -1,11 +1,10 @@
 import { IconCheck, IconCode, IconCopy, IconEye } from "@tabler/icons-react"
+import mermaid from "mermaid"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import mermaid from "mermaid"
-
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Button } from "@/components/ui/button"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 const CODE_LABEL_FONT_FAMILY =
   'ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", monospace'
@@ -68,7 +67,9 @@ export function MessageMermaid({ code }: MessageMermaidProps) {
         setError(null)
       } catch (caughtError) {
         setError(
-          caughtError instanceof Error ? caughtError.message : String(caughtError),
+          caughtError instanceof Error
+            ? caughtError.message
+            : String(caughtError),
         )
       }
     }, 300)
@@ -107,11 +108,7 @@ export function MessageMermaid({ code }: MessageMermaidProps) {
             aria-label={copyLabel}
             title={copyLabel}
           >
-            {isCopied ? (
-              <IconCheck className="text-green-500" />
-            ) : (
-              <IconCopy />
-            )}
+            {isCopied ? <IconCheck className="text-green-500" /> : <IconCopy />}
             <span className="hidden sm:inline">{copyLabel}</span>
           </Button>
           <Button

@@ -1351,11 +1351,7 @@ export function VoiceSection({
     }
     try {
       const parsed: unknown = JSON.parse(raw)
-      if (
-        !parsed ||
-        typeof parsed !== "object" ||
-        Array.isArray(parsed)
-      ) {
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("not-an-object")
       }
       setExtraError(null)
@@ -1381,9 +1377,7 @@ export function VoiceSection({
           }
         >
           <SelectTrigger aria-label={t("pages.config.voice_stt_model")}>
-            <SelectValue
-              placeholder={t("pages.config.voice_model_none")}
-            />
+            <SelectValue placeholder={t("pages.config.voice_model_none")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__none__">
@@ -1410,9 +1404,7 @@ export function VoiceSection({
           }
         >
           <SelectTrigger aria-label={t("pages.config.voice_tts_model")}>
-            <SelectValue
-              placeholder={t("pages.config.voice_model_none")}
-            />
+            <SelectValue placeholder={t("pages.config.voice_model_none")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__none__">

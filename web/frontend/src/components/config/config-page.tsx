@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { patchAppConfig, resetAppConfig } from "@/api/channels"
-import { getModels } from "@/api/models"
 import { launcherFetch } from "@/api/http"
 import { postLauncherDashboardSetup } from "@/api/launcher-auth"
+import { getModels } from "@/api/models"
 import {
   getAutoStartStatus,
   getLauncherConfig,
@@ -40,8 +40,8 @@ import {
   parseFloatField,
   parseIntField,
   parseJSONObjectField,
-  parseMultilineList,
   parseJSONObjectFieldAny,
+  parseMultilineList,
 } from "@/components/config/form-model"
 import { PageHeader } from "@/components/page-header"
 import {
@@ -657,8 +657,7 @@ export function ConfigPage() {
             model_name: form.voiceSTTModel.trim() || null,
             tts_model_name: form.voiceTTSModel.trim() || null,
             echo_transcription: form.voiceEchoTranscription,
-            elevenlabs_api_key:
-              form.voiceElevenLabsAPIKey.trim() || null,
+            elevenlabs_api_key: form.voiceElevenLabsAPIKey.trim() || null,
             extra_body: (() => {
               const extra = parseJSONObjectFieldAny(
                 form.voiceExtraText,

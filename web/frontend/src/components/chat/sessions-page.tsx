@@ -5,10 +5,10 @@ import {
   IconRefresh,
   IconTrash,
 } from "@tabler/icons-react"
+import { useNavigate } from "@tanstack/react-router"
 import dayjs from "dayjs"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useNavigate } from "@tanstack/react-router"
 import { toast } from "sonner"
 
 import {
@@ -57,7 +57,9 @@ export function SessionsPage() {
   )
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const [promptSession, setPromptSession] = useState<SessionSummary | null>(null)
+  const [promptSession, setPromptSession] = useState<SessionSummary | null>(
+    null,
+  )
   const [promptData, setPromptData] = useState<SessionPrompt | null>(null)
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false)
 
@@ -317,7 +319,7 @@ export function SessionsPage() {
           }
         }}
       >
-        <DialogContent className="!flex !w-[95vw] !max-w-[1600px] max-h-[90vh] flex-col gap-4 overflow-hidden">
+        <DialogContent className="!flex max-h-[90vh] !w-[95vw] !max-w-[1600px] flex-col gap-4 overflow-hidden">
           <DialogHeader>
             <DialogTitle>{t("sessions.promptTitle")}</DialogTitle>
             <DialogDescription>{promptSession?.title}</DialogDescription>
@@ -334,7 +336,7 @@ export function SessionsPage() {
                     <Badge variant="secondary" className="mb-2">
                       {msg.role}
                     </Badge>
-                    <pre className="min-w-0 whitespace-pre-wrap break-words text-xs">
+                    <pre className="min-w-0 text-xs break-words whitespace-pre-wrap">
                       {msg.content}
                     </pre>
                   </div>

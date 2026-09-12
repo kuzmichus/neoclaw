@@ -25,11 +25,7 @@ function resolveStatusLabel(
   }
 }
 
-export function TypingIndicator({
-  status,
-}: {
-  status?: AgentStatus | null
-}) {
+export function TypingIndicator({ status }: { status?: AgentStatus | null }) {
   const { t } = useTranslation()
   const activeLabel = resolveStatusLabel(status, t)
 

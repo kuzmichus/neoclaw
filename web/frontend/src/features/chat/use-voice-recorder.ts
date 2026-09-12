@@ -111,31 +111,34 @@ export function useVoiceRecorder(
     chunksRef.current = []
   }, [])
 
-  const finalize = useCallback(async (mimeType: string) => {
-    const extension = extensionForMime(mimeType)
-    const blob = new Blob(chunksRef.current, {
-      type: mimeType || "audio/webm",
-    })
-    try {
-      if (blob.size === 0) {
-        setError("Recording captured no audio")
-        return
-      }
-      const url = await readBlobAsDataURL(blob)
-      onRecordedRef.current({
-        type: "audio",
-        url,
-        contentType: mimeType || "audio/webm",
-        filename: `voice-message.${extension}`,
+  const finalize = useCallback(
+    async (mimeType: string) => {
+      const extension = extensionForMime(mimeType)
+      const blob = new Blob(chunksRef.current, {
+        type: mimeType || "audio/webm",
       })
-    } catch {
-      setError("Failed to process recorded audio")
-    } finally {
-      cleanup()
-      setIsRecording(false)
-      setElapsedMs(0)
-    }
-  }, [cleanup])
+      try {
+        if (blob.size === 0) {
+          setError("Recording captured no audio")
+          return
+        }
+        const url = await readBlobAsDataURL(blob)
+        onRecordedRef.current({
+          type: "audio",
+          url,
+          contentType: mimeType || "audio/webm",
+          filename: `voice-message.${extension}`,
+        })
+      } catch {
+        setError("Failed to process recorded audio")
+      } finally {
+        cleanup()
+        setIsRecording(false)
+        setElapsedMs(0)
+      }
+    },
+    [cleanup],
+  )
 
   const stop = useCallback(() => {
     const recorder = recorderRef.current

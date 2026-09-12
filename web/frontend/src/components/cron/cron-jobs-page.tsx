@@ -151,7 +151,11 @@ export function CronJobsPage() {
   const handleSessionPick = (id: string) => {
     const session = sessions.find((s) => s.id === id)
     if (!session) return
-    setForm((prev) => ({ ...prev, channel: session.channel ?? "", to: session.id }))
+    setForm((prev) => ({
+      ...prev,
+      channel: session.channel ?? "",
+      to: session.id,
+    }))
   }
 
   const handleSave = async () => {
@@ -184,7 +188,9 @@ export function CronJobsPage() {
       await updateCronJob(job.id, { ...toInput(job), enabled: !job.enabled })
       await loadJobs()
     } catch {
-      toast.error(job.enabled ? t("cron.disableFailed") : t("cron.enableFailed"))
+      toast.error(
+        job.enabled ? t("cron.disableFailed") : t("cron.enableFailed"),
+      )
     }
   }
 
@@ -220,7 +226,11 @@ export function CronJobsPage() {
               <IconRefresh className="size-4" />
               {t("cron.refresh")}
             </Button>
-            <Button size="sm" onClick={() => void openCreate()} disabled={gatewayDown}>
+            <Button
+              size="sm"
+              onClick={() => void openCreate()}
+              disabled={gatewayDown}
+            >
               <IconPlus className="size-4" />
               {t("cron.add")}
             </Button>
@@ -241,7 +251,9 @@ export function CronJobsPage() {
               <thead className="bg-muted/50 sticky top-0">
                 <tr className="text-muted-foreground text-left">
                   <th className="px-4 py-3 font-medium">{t("cron.name")}</th>
-                  <th className="px-4 py-3 font-medium">{t("cron.schedule")}</th>
+                  <th className="px-4 py-3 font-medium">
+                    {t("cron.schedule")}
+                  </th>
                   <th className="w-44 px-4 py-3 font-medium">
                     {t("cron.session")}
                   </th>
@@ -290,12 +302,16 @@ export function CronJobsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant="secondary">{formatSchedule(job.schedule)}</Badge>
+                      <Badge variant="secondary">
+                        {formatSchedule(job.schedule)}
+                      </Badge>
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-xs">
                         <div>{job.payload.channel || "—"}</div>
-                        <div className="text-muted-foreground">{job.payload.to}</div>
+                        <div className="text-muted-foreground">
+                          {job.payload.to}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -308,7 +324,9 @@ export function CronJobsPage() {
                     </td>
                     <td className="text-muted-foreground px-4 py-3">
                       {job.state.nextRunAtMs ? (
-                        <span title={dayjs(job.state.nextRunAtMs).format("LLL")}>
+                        <span
+                          title={dayjs(job.state.nextRunAtMs).format("LLL")}
+                        >
                           {dayjs(job.state.nextRunAtMs).fromNow()}
                         </span>
                       ) : (
@@ -362,7 +380,9 @@ export function CronJobsPage() {
               <Input
                 id="cron-name"
                 value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, name: e.target.value }))
+                }
                 placeholder={t("cron.namePlaceholder")}
               />
             </div>
@@ -407,9 +427,7 @@ export function CronJobsPage() {
 
             {form.schedule.kind === "every" && (
               <div className="space-y-1">
-                <Label htmlFor="cron-every">
-                  {t("cron.intervalMinutes")}
-                </Label>
+                <Label htmlFor="cron-every">{t("cron.intervalMinutes")}</Label>
                 <Input
                   id="cron-every"
                   type="number"
@@ -455,7 +473,9 @@ export function CronJobsPage() {
               <Textarea
                 id="cron-message"
                 value={form.message}
-                onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, message: e.target.value }))
+                }
                 placeholder={t("cron.messagePlaceholder")}
                 rows={3}
               />
@@ -466,7 +486,9 @@ export function CronJobsPage() {
               <Input
                 id="cron-command"
                 value={form.command ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, command: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, command: e.target.value }))
+                }
                 placeholder={t("cron.commandPlaceholder")}
                 className="font-mono"
               />
@@ -504,7 +526,9 @@ export function CronJobsPage() {
                 <Input
                   id="cron-to"
                   value={form.to ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, to: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, to: e.target.value }))
+                  }
                 />
               </div>
             </div>

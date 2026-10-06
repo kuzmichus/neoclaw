@@ -4,6 +4,7 @@ import { useAtomValue } from "jotai"
 import {
   newChatSession,
   sendChatMessage,
+  stopChatMessage,
   switchChatSession,
 } from "@/features/chat/controller"
 import { chatAtom } from "@/store/chat"
@@ -59,6 +60,7 @@ export function usePicoChat() {
     messages,
     connectionState,
     isTyping,
+    isStopping,
     activeSessionId,
     contextUsage,
     agentStatus,
@@ -68,10 +70,12 @@ export function usePicoChat() {
     messages,
     connectionState,
     isTyping,
+    isStopping,
     activeSessionId,
     contextUsage,
     agentStatus,
     sendMessage: sendChatMessage,
+    stopMessage: stopChatMessage,
     switchSession: switchChatSession,
     newChat: newChatSession,
   }

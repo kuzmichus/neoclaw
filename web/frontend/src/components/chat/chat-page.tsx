@@ -134,10 +134,12 @@ export function ChatPage() {
     messages,
     connectionState,
     isTyping,
+    isStopping,
     activeSessionId,
     contextUsage,
     agentStatus,
     sendMessage,
+    stopMessage,
     switchSession,
     newChat,
   } = usePicoChat()
@@ -217,6 +219,11 @@ export function ChatPage() {
       setInput("")
       setAttachments([])
     }
+  }
+
+  const handleStop = () => {
+    if (!canInput) return
+    stopMessage()
   }
 
   const handleAddAttachments = () => {
@@ -469,6 +476,7 @@ export function ChatPage() {
         onDrop={handleComposerDrop}
         onRemoveAttachment={handleRemoveAttachment}
         onSend={handleSend}
+        onStop={handleStop}
         onContextDetail={() => {
           if (sendMessage({ content: "/context", attachments: [] })) {
             setInput("")
@@ -476,6 +484,8 @@ export function ChatPage() {
         }}
         inputDisabledReason={inputDisabledReason}
         canSend={canSubmit}
+        isTyping={isTyping}
+        isStopping={isStopping}
         isDragActive={isDragActive}
         contextUsage={contextUsage}
       />

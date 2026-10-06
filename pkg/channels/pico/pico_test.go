@@ -106,6 +106,130 @@ func TestHandleMessageSend_ResumesExplicitSessionKey(t *testing.T) {
 	}
 }
 
+func TestHandleMessageStop_PublishesStopCommand(t *testing.T) {
+	msgBus := bus.NewMessageBus()
+	bc := &config.Channel{Type: config.ChannelPico, Enabled: true}
+	cfg := &config.PicoSettings{}
+	cfg.SetToken("test-token")
+	ch, err := NewPicoChannel(bc, cfg, msgBus)
+	if err != nil {
+		t.Fatalf("NewPicoChannel: %v", err)
+	}
+	ch.ctx = context.Background()
+
+	ch.handleMessage(&picoConn{id: "conn-1", sessionID: "sess-1"}, PicoMessage{
+		Type:      TypeMessageStop,
+		ID:        "stop-1",
+		SessionID: "sess-1",
+	})
+
+	select {
+	case inbound := <-msgBus.InboundChan():
+		if inbound.Content != stopCommandContent {
+			t.Fatalf("content = %q, want %q", inbound.Content, stopCommandContent)
+		}
+		if inbound.ChatID != "pico:sess-1" {
+			t.Fatalf("chat id = %q, want pico:sess-1", inbound.ChatID)
+		}
+		if inbound.MessageID != "stop-1" {
+			t.Fatalf("message id = %q, want stop-1", inbound.MessageID)
+		}
+		if len(inbound.Media) != 0 {
+			t.Fatalf("media = %v, want none", inbound.Media)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected inbound stop message")
+	}
+}
+
+func TestHandleMessageStop_ResumesExplicitSessionKey(t *testing.T) {
+	msgBus := bus.NewMessageBus()
+	bc := &config.Channel{Type: config.ChannelPico, Enabled: true}
+	cfg := &config.PicoSettings{}
+	cfg.SetToken("test-token")
+	ch, err := NewPicoChannel(bc, cfg, msgBus)
+	if err != nil {
+		t.Fatalf("NewPicoChannel: %v", err)
+	}
+	ch.ctx = context.Background()
+
+	// The stop request must target the same session as the running turn, so it
+	// has to carry the explicit opaque key instead of re-deriving a new one.
+	const storedKey = "sk_v1_abc123def456abc123def456abc123def456abc123def456abc123def456ab"
+	ch.handleMessageStop(&picoConn{id: "conn-1", sessionID: storedKey}, PicoMessage{
+		Type:      TypeMessageStop,
+		ID:        "stop-1",
+		SessionID: storedKey,
+	})
+
+	select {
+	case inbound := <-msgBus.InboundChan():
+		if inbound.SessionKey != storedKey {
+			t.Fatalf("SessionKey = %q, want %q", inbound.SessionKey, storedKey)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected inbound stop message")
+	}
+}
+
+// countingPlaceholderRecorder records whether the channel tried to register
+// typing/placeholder state for an inbound message.
+type countingPlaceholderRecorder struct {
+	placeholders int
+	typingStops  int
+	reactionUndo int
+}
+
+func (r *countingPlaceholderRecorder) RecordPlaceholder(_, _, _ string) {
+	r.placeholders++
+}
+
+func (r *countingPlaceholderRecorder) RecordTypingStop(_, _ string, _ func()) {
+	r.typingStops++
+}
+
+func (r *countingPlaceholderRecorder) RecordReactionUndo(_, _ string, _ func()) {
+	r.reactionUndo++
+}
+
+func TestHandleMessageStop_SkipsTypingAndPlaceholderIndicators(t *testing.T) {
+	msgBus := bus.NewMessageBus()
+	bc := &config.Channel{Type: config.ChannelPico, Enabled: true}
+	cfg := &config.PicoSettings{}
+	cfg.SetToken("test-token")
+	ch, err := NewPicoChannel(bc, cfg, msgBus)
+	if err != nil {
+		t.Fatalf("NewPicoChannel: %v", err)
+	}
+	ch.ctx = context.Background()
+
+	recorder := &countingPlaceholderRecorder{}
+	ch.SetPlaceholderRecorder(recorder)
+	ch.SetOwner(ch)
+
+	ch.handleMessageStop(&picoConn{id: "conn-1", sessionID: "sess-1"}, PicoMessage{
+		Type:      TypeMessageStop,
+		ID:        "stop-1",
+		SessionID: "sess-1",
+	})
+
+	select {
+	case <-msgBus.InboundChan():
+	case <-time.After(time.Second):
+		t.Fatal("expected inbound stop message")
+	}
+
+	// A stop is a control request: registering typing/placeholder state for it
+	// would emit an extra typing.stop for the turn we are about to abort and
+	// could orphan the placeholder of the message that started the turn.
+	if recorder.typingStops != 0 || recorder.placeholders != 0 || recorder.reactionUndo != 0 {
+		t.Fatalf(
+			"stop must not register indicators, got typing=%d placeholder=%d reaction=%d",
+			recorder.typingStops, recorder.placeholders, recorder.reactionUndo,
+		)
+	}
+}
+
 func TestFinalizeTrackedToolFeedbackMessage_StopsTrackingBeforeEdit(t *testing.T) {
 	ch := &PicoChannel{
 		progress: channels.NewToolFeedbackAnimator(nil),

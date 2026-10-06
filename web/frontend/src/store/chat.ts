@@ -72,6 +72,11 @@ export interface ChatStoreState {
   messages: ChatMessage[]
   connectionState: ConnectionState
   isTyping: boolean
+  // True from the moment the client sends `message.stop` until the backend
+  // confirms via `typing.stop`, `error` or the stop reply; keeps the stop
+  // button rendered (and disabled) instead of flipping back to send while the
+  // abort is still in flight.
+  isStopping: boolean
   activeSessionId: string
   hasHydratedActiveSession: boolean
   contextUsage?: ContextUsage
@@ -84,6 +89,7 @@ const DEFAULT_CHAT_STATE: ChatStoreState = {
   messages: [],
   connectionState: "disconnected",
   isTyping: false,
+  isStopping: false,
   activeSessionId: getInitialActiveSessionId(),
   hasHydratedActiveSession: false,
   agentStatus: null,

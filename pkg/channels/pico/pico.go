@@ -162,6 +162,7 @@ type PicoChannel struct {
 	*channels.BaseChannel
 	bc                 *config.Channel
 	config             *config.PicoSettings
+	messageBus         *bus.MessageBus
 	upgrader           websocket.Upgrader
 	connections        map[string]*picoConn            // connID -> *picoConn
 	sessionConnections map[string]map[string]*picoConn // sessionID -> connID -> *picoConn
@@ -204,6 +205,7 @@ func NewPicoChannel(
 		BaseChannel: base,
 		bc:          bc,
 		config:      cfg,
+		messageBus:  messageBus,
 		upgrader: websocket.Upgrader{
 			CheckOrigin:     checkOrigin,
 			ReadBufferSize:  1024,
@@ -1268,6 +1270,9 @@ func (c *PicoChannel) handleMessage(pc *picoConn, msg PicoMessage) {
 	case TypeMediaSend:
 		c.handleMessageSend(pc, msg)
 
+	case TypeMessageStop:
+		c.handleMessageStop(pc, msg)
+
 	default:
 		errMsg := newError("unknown_type", fmt.Sprintf("unknown message type: %s", msg.Type))
 		pc.writeJSON(errMsg)
@@ -1356,6 +1361,92 @@ func (c *PicoChannel) handleMessageSend(pc *picoConn, msg PicoMessage) {
 	}
 
 	c.HandleInboundContext(c.ctx, chatID, content, media, inboundCtx, sender)
+}
+
+// stopCommandContent is the inbound content published for an explicit
+// message.stop request. The agent loop recognizes it via commands.CommandName
+// and aborts the turn that is currently running for the session.
+const stopCommandContent = "/stop"
+
+// handleMessageStop processes an inbound message.stop from a client: it stops
+// the agent turn currently running for this session. The stop request follows
+// the same routing rules as message.send (session resolution, sender
+// allowlist) but never carries user content or media.
+//
+// Unlike message.send it publishes straight to the message bus instead of
+// going through HandleInboundContext: a stop is a control request, not a user
+// message, so it must not start a typing indicator, register a new typing-stop
+// callback (the swap in RecordTypingStop would emit an immediate typing.stop
+// for the still-running turn) or inject a placeholder bubble into the chat.
+func (c *PicoChannel) handleMessageStop(pc *picoConn, msg PicoMessage) {
+	sessionID := msg.SessionID
+	if sessionID == "" {
+		sessionID = pc.sessionID
+	}
+
+	if msg.ID == "" {
+		msg.ID = uuid.NewString()
+	}
+
+	chatID := "pico:" + sessionID
+	senderID := "pico-user"
+
+	metadata := map[string]string{
+		"platform":   "pico",
+		"session_id": sessionID,
+		"conn_id":    pc.id,
+	}
+
+	logger.DebugCF("pico", "Received stop request", map[string]any{
+		"session_id": sessionID,
+	})
+
+	sender := bus.SenderInfo{
+		Platform:    "pico",
+		PlatformID:  senderID,
+		CanonicalID: identity.BuildCanonicalID("pico", senderID),
+	}
+
+	if !c.IsAllowedSender(sender) {
+		return
+	}
+
+	inboundCtx := bus.InboundContext{
+		Channel:   "pico",
+		ChatID:    chatID,
+		ChatType:  "direct",
+		SenderID:  senderID,
+		MessageID: msg.ID,
+		Raw:       metadata,
+	}
+
+	if session.IsExplicitSessionKey(sessionID) {
+		inboundCtx.SessionKey = sessionID
+	}
+
+	if c.messageBus == nil {
+		pc.writeJSON(newErrorWithPayload("stop_failed", "message bus is not available", map[string]any{
+			"request_id": msg.ID,
+		}))
+		return
+	}
+
+	inbound := bus.InboundMessage{
+		Context:    inboundCtx,
+		Sender:     sender,
+		Content:    stopCommandContent,
+		SessionKey: inboundCtx.SessionKey,
+	}
+
+	if err := c.messageBus.PublishInbound(c.ctx, inbound); err != nil {
+		logger.ErrorCF("pico", "Failed to publish stop request", map[string]any{
+			"session_id": sessionID,
+			"error":      err.Error(),
+		})
+		pc.writeJSON(newErrorWithPayload("stop_failed", "failed to stop the running request", map[string]any{
+			"request_id": msg.ID,
+		}))
+	}
 }
 
 // resolveInboundMedia converts parsed inline media entries into the media

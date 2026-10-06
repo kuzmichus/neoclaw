@@ -10,6 +10,9 @@ const (
 	// TypeMessageSend is sent from client to server.
 	TypeMessageSend = "message.send"
 	TypeMediaSend   = "media.send"
+	// TypeMessageStop asks the server to abort the agent turn that is
+	// currently running for this session.
+	TypeMessageStop = "message.stop"
 	TypePing        = "ping"
 
 	// TypeMessageCreate is sent from server to client.

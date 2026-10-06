@@ -163,6 +163,11 @@ export function handlePicoMessage(
         // status panel stays visible through tool calls and intermediate
         // messages until the final answer arrives.
         isTyping: prev.isTyping,
+        // Any incoming message proves the backend is responsive again, so a
+        // pending stop can never wedge the composer in its disabled state
+        // (covers the "No active task to stop." reply, which arrives without
+        // a preceding `typing.stop` when the turn had already finished).
+        isStopping: false,
         // Fallback: if the backend hasn't sent an explicit agent.status for
         // this tool call, surface the tool feedback explanation / name.
         ...(prev.agentStatus == null && toolCalls && toolCalls.length > 0
@@ -252,7 +257,7 @@ export function handlePicoMessage(
       break
 
     case "typing.stop":
-      updateChatStore({ isTyping: false, agentStatus: null })
+      updateChatStore({ isTyping: false, isStopping: false, agentStatus: null })
       break
 
     case "agent.status": {
@@ -282,6 +287,7 @@ export function handlePicoMessage(
           ? prev.messages.filter((msg) => msg.id !== requestId)
           : prev.messages,
         isTyping: false,
+        isStopping: false,
         agentStatus: null,
       }))
       break

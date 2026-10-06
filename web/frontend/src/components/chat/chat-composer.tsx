@@ -47,9 +47,12 @@ interface ChatComposerProps {
   onDrop: (event: ReactDragEvent<HTMLDivElement>) => void
   onRemoveAttachment: (index: number) => void
   onSend: () => void
+  onStop: () => void
   onContextDetail?: () => void
   inputDisabledReason: ChatInputDisabledReason | null
   canSend: boolean
+  isTyping: boolean
+  isStopping: boolean
   isDragActive: boolean
   contextUsage?: ContextUsage
 }
@@ -69,9 +72,12 @@ export function ChatComposer({
   onDrop,
   onRemoveAttachment,
   onSend,
+  onStop,
   onContextDetail,
   inputDisabledReason,
   canSend,
+  isTyping,
+  isStopping,
   isDragActive,
   contextUsage,
 }: ChatComposerProps) {
@@ -79,6 +85,11 @@ export function ChatComposer({
   const canInput = inputDisabledReason === null
   const composingRef = useRef(false)
   const hasInput = input.trim().length > 0
+  // While the agent is working the send button turns into a stop button; it
+  // stays in that shape (disabled) until the backend confirms the abort.
+  const showStop = isTyping || isStopping
+  const actionDisabled = showStop ? isStopping : !canSend
+  const stopLabel = t("chat.stopGeneration")
   const disabledMessage =
     inputDisabledReason === null
       ? null
@@ -245,16 +256,26 @@ export function ChatComposer({
                 />
               )}
               {canInput ? (
-                <span tabIndex={!canSend ? 0 : undefined}>
+                <span tabIndex={actionDisabled ? 0 : undefined}>
                   <Button
                     type="button"
                     size="icon"
-                    className="size-8 rounded-full bg-violet-500 text-white transition-transform hover:bg-violet-600 active:scale-95"
-                    onClick={onSend}
-                    disabled={!canSend}
-                    aria-label={t("chat.sendMessage")}
+                    className={cn(
+                      "size-8 rounded-full text-white transition-transform active:scale-95",
+                      showStop
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-violet-500 hover:bg-violet-600",
+                    )}
+                    onClick={showStop ? onStop : onSend}
+                    disabled={actionDisabled}
+                    aria-label={showStop ? stopLabel : t("chat.sendMessage")}
+                    title={showStop ? stopLabel : undefined}
                   >
-                    <IconArrowUp className="size-4" />
+                    {showStop ? (
+                      <IconPlayerStop className="size-4" />
+                    ) : (
+                      <IconArrowUp className="size-4" />
+                    )}
                   </Button>
                 </span>
               ) : null}

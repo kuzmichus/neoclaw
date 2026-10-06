@@ -103,6 +103,7 @@ function disconnectChatInternal({
   updateChatStore({
     connectionState: "disconnected",
     isTyping: false,
+    isStopping: false,
   })
 }
 
@@ -206,6 +207,7 @@ export async function connectChat() {
       updateChatStore({
         connectionState: "disconnected",
         isTyping: false,
+        isStopping: false,
       })
       scheduleReconnect(generation, sessionId)
     }
@@ -285,6 +287,7 @@ export async function hydrateActiveSession() {
       updateChatStore({
         messages: historyMessages,
         isTyping: false,
+        isStopping: false,
         hasHydratedActiveSession: true,
       })
     })
@@ -305,6 +308,7 @@ export async function hydrateActiveSession() {
       updateChatStore({
         messages: [],
         isTyping: false,
+        isStopping: false,
         hasHydratedActiveSession: true,
       })
     })
@@ -389,6 +393,36 @@ export function sendChatMessage({
       messages: prev.messages.filter((message) => message.id !== id),
       isTyping: false,
     }))
+    return false
+  }
+}
+
+// stopChatMessage asks the backend to abort the agent turn currently running
+// in this session. It never creates a user bubble: the stop is a control
+// request, and the confirmation ("Task stopped…") is published by the agent
+// as a regular assistant message.
+export function stopChatMessage() {
+  if (!wsRef || wsRef.readyState !== WebSocket.OPEN) {
+    console.warn("WebSocket not connected")
+    return false
+  }
+
+  const socket = wsRef
+  const id = `stop-${++msgIdCounter}-${Date.now()}`
+
+  updateChatStore({ isStopping: true })
+
+  try {
+    socket.send(
+      JSON.stringify({
+        type: "message.stop",
+        id,
+      }),
+    )
+    return true
+  } catch (error) {
+    console.error("Failed to send pico stop request:", error)
+    updateChatStore({ isStopping: false })
     return false
   }
 }
